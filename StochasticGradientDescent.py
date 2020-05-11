@@ -6,7 +6,7 @@ Created on Sat May  9 15:31:05 2020
 """
 import random
 #随机梯度下降法
-def SGD(self, training_data, epochs, mini_batch_size, eta,
+def SGD_function(training_data, epochs, mini_batch_size, learn_rate,
             test_data=None):
     """
     :param training_data: training_data 是一个 (x, y) 元组的列表，表⽰训练输⼊和其对应的期望输出。
@@ -36,7 +36,7 @@ def SGD(self, training_data, epochs, mini_batch_size, eta,
         """
         for mini_batch in mini_batches:
             # 对于最小训练集组成的集合mini_batches中的每一个最小训练集mini_batch
-            self.update_mini_batch(mini_batch, eta)
+            self.update_mini_batch(mini_batch, learn_rate)
             # 调用梯度下降算法
         if test_data:
             # 如果有测试数据集
