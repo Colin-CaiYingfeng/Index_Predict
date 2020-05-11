@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Created on Sat May  9 15:31:05 2020
 
-@author: Administrator
+@author: Colin
 """
 import random
 #随机梯度下降法
