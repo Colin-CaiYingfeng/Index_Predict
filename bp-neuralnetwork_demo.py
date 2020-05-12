@@ -36,11 +36,11 @@ def sigmoid_deriv(x):
 #因为是做时间序列预测所以说隐藏层到输出层不需要额外的激活函数
 #隐藏层的output即输出层的output
 class BPnn(object):
-    def __init__(self, activation_choose = 'sigmoid', learn_rate):
-        if activation_choose == 'sigmoid':
+    def __init__(self, activation = '', learn_rate):
+        if activation == 'sigmoid':
             self.activation = sigmoid
             self.activation_deriv = sigmoid_deriv
-        elif activation_choose == 'tanh':
+        elif activation == 'tanh':
             self.activation = tanh
             self.activation_deriv = tanh_deriv
         #设置学习率
@@ -76,8 +76,8 @@ class BPnn(object):
     
         return (new_b, new_w)
     
-    #更新权值和偏置
-    def update(self, mini_batch, learn_rate):
+    #梯度下降更新b，w的具体算法
+    def update_mini_batch(self, mini_batch, learn_rate):
         new_b = [np.zeros(b.shape) for b in self.biases]
         new_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
@@ -93,4 +93,38 @@ class BPnn(object):
     def SGD(self, training_data, epochs, mini_batch_size, learn_rate, test_data=None):
         return SGD_function(training_data, epochs, mini_batch_size, learn_rate, test_data=None)
     
+    #评价函数
+    def evaluate(self, test_data):
+        """
+        Return the number of test inputs for which the neural
+        network outputs the correct result. Note that the neural
+        network's output is assumed to be the index of whichever
+        neuron in the final layer has the highest activation.
+        """
+    test_results = [(np.argmax(self.feedforward(x)), y) 
+                    for (x, y) in test_data]
+    return sum(int(x == y) for (x, y) in test_results)
+
+    #均方误差MSE作为loss函数
+    def mse_loss(self, training_data):
+        x_t, x_label = training_data
+        test_results = [.5 * norm(self.feedforward(x).flatten() - y)**2
+                        for (x, y) in zip(list(x_t), list(x_label))]
+        return np.array(test_results).mean()
     
+    #loss函数的导数
+    def cost_derivative(self, output_activations, y):
+        return (output_activations - y)
+    
+    # 预测
+    def predict(self, data):
+        data = data.reshape(-1, self.sizes_[0])
+        value = np.array([np.argmax(net.feedforward(x)) for x in data], dtype='uint8')
+        return value
+    
+    # 保存训练模型
+    def save(self):
+        pass  # 把_w和_b保存到文件(pickle)
+    
+    def load(self):
+        pass
