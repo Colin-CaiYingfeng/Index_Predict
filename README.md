@@ -10,9 +10,9 @@ A simple Python script to predict 00001.SH index.
 
 #### Features：
 2020.05.12 update:
-1. 上传了传统BPnn的demo（基于numpy）
-   Upload a demo of Back Propagation Neural Network (based on Numpy)
-2. 采用均方误差作为损失函数函数 
-   Loss Function: MSE
-3. 随机梯度下降法 
-   Stochastic gradient descent
+1. 上传了传统BPnn的demo（基于numpy）  
+Upload a demo of Back Propagation Neural Network (based on Numpy)
+2. 采用均方误差作为损失函数函数  
+Loss Function: MSE
+3. 随机梯度下降法  
+Stochastic gradient descent
