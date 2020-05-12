@@ -6,9 +6,9 @@ Created on Mon May 11 16:07:26 2020
 """
 #配置环境
 import numpy as np
-import time
+from numpy.linalg import norm
 import random
-from StochasticGradientDescent import *
+import time
 #%%
 # 计时器
 def timer(func):
@@ -36,7 +36,9 @@ def sigmoid_deriv(x):
 #因为是做时间序列预测所以说隐藏层到输出层不需要额外的激活函数
 #隐藏层的output即输出层的output
 class BPnn(object):
-    def __init__(self, activation = '', learn_rate):
+    def __init__(self,  learn_rate, sizes, activation = ''):
+        self.sizes_ = sizes
+        self.num_layers_ = len(sizes)  # 层数
         if activation == 'sigmoid':
             self.activation = sigmoid
             self.activation_deriv = sigmoid_deriv
@@ -73,7 +75,14 @@ class BPnn(object):
         delta = self.cost_derivative(xis[-1], y) * self.activation_deriv(xos[-1])
         new_b[-1] = delta
         new_w[-1] = np.dot(delta, xis[-2].transpose())
-    
+        
+        for l in range(2, self.num_layers_):
+            xo = xos[-l]
+            sp = self.sigmoid_der(xo)
+            delta = np.dot(self.w_[-l+1].transpose(), delta) * sp
+            new_b[-l] = delta
+            new_w[-l] = np.dot(delta, xis[-l-1].transpose())
+            
         return (new_b, new_w)
     
     #梯度下降更新b，w的具体算法
@@ -85,13 +94,49 @@ class BPnn(object):
             new_b = [nb+dnb for nb, dnb in zip(new_b, delta_new_b)]
             new_w = [nw+dnw for nw, dnw in zip(new_w, delta_new_w)]
         
-        self.w_ = [w - lr * nw for w, nw in zip(self.w_, new_w)]
-        self.b_ = [b - lr * nb for b, nb in zip(self.b_, new_b)]
+        self.w_ = [w - learn_rate * nw for w, nw in zip(self.w_, new_w)]
+        self.b_ = [b - learn_rate * nb for b, nb in zip(self.b_, new_b)]
     
     @timer
     #随机梯度下降法
-    def SGD(self, training_data, epochs, mini_batch_size, learn_rate, test_data=None):
-        return SGD_function(training_data, epochs, mini_batch_size, learn_rate, test_data=None)
+    def SGD_function(self, training_data, epochs, mini_batch_size, learn_rate,
+            test_data):
+        """
+        training_data: training_data 是一个 (x, y) 元组的列表，表⽰训练输⼊和其对应的期望输出。
+        epochs: 变量 epochs为迭代期数量
+        mini_batch_size: 变量mini_batch_size为采样时的⼩批量数据的⼤⼩
+        learn_rate: 学习速率
+        test_data: 如果给出了可选参数 test_data ，那么程序会在每个训练器后评估，并打印出部分进展。
+        这对于追踪进度很有用，但相当拖慢执行速度。
+        """
+        training_data = list(training_data)#将训练数据集强转为list
+        n = len(training_data)#n为训练数据总数，大小等于训练数据集的大小
+        if test_data:# 如果有测试数据集
+            test_data = list(test_data)# 将测试数据集强转为list
+            n_test = len(test_data)# n_test为测试数据总数，大小等于测试数据集的大小
+        for j in range(epochs):# 对于每一个迭代期
+            random.shuffle(training_data)# shuffle() 方法将序列的所有元素随机排序。
+            mini_batches = [
+                training_data[k:k + mini_batch_size] for k in range(0, n, mini_batch_size)
+            ]
+            """
+            对于下标为0到n-1中的每一个下标，最小数据集为从训练数据集中下标为k到下标为k+⼩批量数据的⼤⼩-1之间的所有元素
+            这些最小训练集组成的集合为mini_batches
+            mini_batches[0]=training_data[0:0+mini_batch_size]
+            mini_batches[1]=training_data[mini_batch_size:mini_batch_size+mini_batch_size]
+            """
+        for mini_batch in mini_batches:
+            # 对于最小训练集组成的集合mini_batches中的每一个最小训练集mini_batch
+            self.update_mini_batch(mini_batch, learn_rate)
+            # 调用梯度下降算法
+        if test_data:
+            # 如果有测试数据集
+            print("Epoch {} : {} / {}".format(j, self.evaluate(test_data), n_test));
+            # j为迭代期序号
+            # evaluate(test_data)为测试通过的数据个数
+            # n_test为测试数据集的大小
+        else:
+            print("Epoch {} complete".format(j))
     
     #评价函数
     def evaluate(self, test_data):
@@ -101,9 +146,9 @@ class BPnn(object):
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation.
         """
-    test_results = [(np.argmax(self.feedforward(x)), y) 
+        test_results = [(np.argmax(self.feedforward(x)), y) 
                     for (x, y) in test_data]
-    return sum(int(x == y) for (x, y) in test_results)
+        return sum(int(x == y) for (x, y) in test_results)
 
     #均方误差MSE作为loss函数
     def mse_loss(self, training_data):
@@ -115,16 +160,3 @@ class BPnn(object):
     #loss函数的导数
     def cost_derivative(self, output_activations, y):
         return (output_activations - y)
-    
-    # 预测
-    def predict(self, data):
-        data = data.reshape(-1, self.sizes_[0])
-        value = np.array([np.argmax(net.feedforward(x)) for x in data], dtype='uint8')
-        return value
-    
-    # 保存训练模型
-    def save(self):
-        pass  # 把_w和_b保存到文件(pickle)
-    
-    def load(self):
-        pass
