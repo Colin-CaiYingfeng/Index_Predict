@@ -12,8 +12,8 @@ def SGD_function(training_data, epochs, mini_batch_size, learn_rate,
     :param training_data: training_data 是一个 (x, y) 元组的列表，表⽰训练输⼊和其对应的期望输出。
     :param epochs: 变量 epochs为迭代期数量
     :param mini_batch_size: 变量mini_batch_size为采样时的⼩批量数据的⼤⼩
-    :param eta: 学习速率
-    :param test_data: 如果给出了可选参数 test_data ，那么程序会在每个训练器后评估⽹络，并打印出部分进展。
+    :param learn_rate: 学习速率
+    :param test_data: 如果给出了可选参数 test_data ，那么程序会在每个训练器后评估，并打印出部分进展。
     这对于追踪进度很有⽤，但相当拖慢执⾏速度。
     :return:
     """
